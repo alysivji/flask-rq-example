@@ -1,11 +1,14 @@
 import logging
 from flask import Flask, request
+from rq.handlers import move_to_failed_queue
 
 from .config import DATABASE_URI, REDIS_URI
 from .extensions import db, migrate, rq
 from .blueprints import healthcheck_bp, sandbox_bp
 
 logger = logging.getLogger(__name__)
+
+rq.exception_handler(move_to_failed_queue)
 
 
 @rq.exception_handler
@@ -29,7 +32,7 @@ def create_app(*, testing=False):
     migrate.init_app(app, db)
 
     app.config['RQ_REDIS_URL'] = REDIS_URI
-    app.config['RQ_QUEUES'] = ['default']
+    app.config['RQ_QUEUES'] = ['default', 'failed']
     app.config['RQ_ASYNC'] = True
     rq.init_app(app)
 

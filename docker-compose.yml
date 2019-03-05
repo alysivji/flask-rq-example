@@ -53,3 +53,13 @@ services:
       FLASK_APP: /home/web/app/__init__.py
       DATABASE_URI: postgresql://sivpack:sivpack_dev@db:5432/sivdev
       REDIS_URI: redis://redis:6379
+  rq-dash:
+    build:
+      context: ./rq-dashboard/
+    environment:
+      RQ_DASHBOARD_REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    ports:
+      - "9181:9181"
+    command: ["rq-dashboard"]
