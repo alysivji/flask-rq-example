@@ -1,5 +1,6 @@
 Flask
 Flask-Migrate
+Flask-RQ2
 Flask-SQLAlchemy
 gunicorn
 psycopg2-binary

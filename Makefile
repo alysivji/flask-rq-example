@@ -24,10 +24,10 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d web db
+	docker-compose up -d
 
 start:
-	docker-compose start web db
+	docker-compose start
 
 stop:
 	docker-compose stop
@@ -36,8 +36,10 @@ down:
 	docker-compose down
 
 attach: ## Attach to web container
-	$(eval CONTAINER_SHA=$(shell docker-compose ps -q web))
-	docker attach $(CONTAINER_SHA)
+	docker attach `docker-compose ps -q web`
+
+attach-worker: ## Attach to worker container
+	docker attach `docker-compose ps -q worker`
 
 logs:
 	docker logs -f app_web

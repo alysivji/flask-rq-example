@@ -1,8 +1,17 @@
+import logging
 from flask import Flask, request
 
-from .config import DATABASE_URI
-from .extensions import db, migrate
+from .config import DATABASE_URI, REDIS_URI
+from .extensions import db, migrate, rq
 from .blueprints import healthcheck_bp, sandbox_bp
+
+logger = logging.getLogger(__name__)
+
+
+@rq.exception_handler
+def send_alert_to_ops(job, *exc_info):
+    print(2)
+    logger.error("error occurred")
 
 
 def create_app(*, testing=False):
@@ -18,6 +27,11 @@ def create_app(*, testing=False):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.init_app(app)
     migrate.init_app(app, db)
+
+    app.config['RQ_REDIS_URL'] = REDIS_URI
+    app.config['RQ_QUEUES'] = ['default']
+    app.config['RQ_ASYNC'] = True
+    rq.init_app(app)
 
     app.register_blueprint(healthcheck_bp)
     app.register_blueprint(sandbox_bp)

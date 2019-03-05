@@ -1,4 +1,4 @@
-version: '3'
+version: '3.6'
 
 services:
   db:
@@ -9,6 +9,15 @@ services:
       POSTGRES_PASSWORD: sivpack_dev
     ports:
       - "9432:5432"
+  redis:
+    image: redis:4.0-alpine
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli","ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+
   web:
     build:
       context: .
@@ -26,3 +35,21 @@ services:
     environment:
       FLASK_APP: /home/web/app/__init__.py
       DATABASE_URI: postgresql://sivpack:sivpack_dev@db:5432/sivdev
+      REDIS_URI: redis://redis:6379
+
+  worker:
+    build:
+      context: .
+    image: app_web
+    command: ["flask", "rq", "worker"]
+    depends_on:
+      - db
+    volumes:
+      - .:/home/web/
+      - ./.pdbrc.py:/home/sivpack/.pdbrc.py
+    stdin_open: true
+    tty: true
+    environment:
+      FLASK_APP: /home/web/app/__init__.py
+      DATABASE_URI: postgresql://sivpack:sivpack_dev@db:5432/sivdev
+      REDIS_URI: redis://redis:6379
