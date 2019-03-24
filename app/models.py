@@ -1,7 +1,8 @@
 from datetime import datetime
 
-import redis
-import rq as redis_queue
+from redis.exceptions import RedisError
+from rq.job import Job
+from rq.exceptions import NoSuchJobError
 from sqlalchemy.ext.declarative import declared_attr
 
 from app.extensions import db, rq
@@ -49,7 +50,7 @@ class Task(BaseModel):
     """Task Information Table"""
 
     def __repr__(self):
-        return f"<Task: {self.user.email}-{self.name}>"
+        return f"<Task: {self.id}-{self.name}>"
 
     # Attributes
     id = db.Column(db.String(36), primary_key=True)
@@ -64,8 +65,8 @@ class Task(BaseModel):
 
     def get_rq_job(self):
         try:
-            rq_job = redis_queue.job.Job.fetch(self.id)
-        except (redis.exceptions.RedisError, redis_queue.exceptions.NoSuchJobError):
+            rq_job = Job.fetch(self.id, rq.connection)
+        except (RedisError, NoSuchJobError):
             return None
         return rq_job
 

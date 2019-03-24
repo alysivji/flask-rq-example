@@ -6,7 +6,7 @@ from app.config import IN_PRODUCTION, SENTRY_DSN
 from app.extensions import rq
 from app.tasks.handlers import retry_failed_job
 
-if IN_PRODUCTION:
+if IN_PRODUCTION and SENTRY_DSN:
     sentry_sdk.init(SENTRY_DSN, integrations=[RqIntegration()])
 
 app = create_app()
