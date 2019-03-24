@@ -1,6 +1,10 @@
 from datetime import datetime
+
+import redis
+import rq as redis_queue
 from sqlalchemy.ext.declarative import declared_attr
-from app.extensions import db
+
+from app.extensions import db, rq
 
 
 class BaseModel(db.Model):
@@ -52,6 +56,7 @@ class Task(BaseModel):
     name = db.Column(db.String(128), index=True)
     description = db.Column(db.String(128))
     user_id = db.Column(db.Integer, db.ForeignKey("user.id", name="fk_task_user_id"))
+    failed = db.Column(db.Boolean, default=False)
     complete = db.Column(db.Boolean, default=False)
 
     # Relationships
@@ -59,8 +64,8 @@ class Task(BaseModel):
 
     def get_rq_job(self):
         try:
-            rq_job = rq.job.Job.fetch(self.id, connection=redis_conn)
-        except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
+            rq_job = redis_queue.job.Job.fetch(self.id)
+        except (redis.exceptions.RedisError, redis_queue.exceptions.NoSuchJobError):
             return None
         return rq_job
 

@@ -25,6 +25,7 @@ build:
 
 up:
 	docker-compose up -d
+	make migrate-up
 
 start:
 	docker-compose start
@@ -48,19 +49,31 @@ shell: ## Shell into web container
 	$(eval CONTAINER_SHA=$(shell docker-compose ps -q web))
 	docker exec -it $(CONTAINER_SHA) bash
 
-dbshell: ## Shell into postgres process inside db container
-	docker-compose exec db psql -U sivpack
+shell-worker: ## Shell into web container
+	docker exec -it `docker-compose ps -q worker` bash
 
-migrate: up ## Run migrations using flyway
-	# docker-compose run --rm migrate
+shell-dev:
+	docker-compose exec web ipython -i scripts/shell.py
 
-test: migrate
+shell-db: ## Shell into postgres process inside db container
+	docker-compose exec db psql -U sivpack sivdev
+
+migrate-up: ## Run migrations
+	docker-compose exec web flask db upgrade
+
+migrate-down: ## Rollback migrations
+	docker-compose exec web flask db downgrade
+
+migration: ## Create migrations
+	docker-compose exec web flask db migrate -m "$(m)"
+
+test: migrate-up
 	docker-compose exec web pytest --runslow
 
-test_cov: migrate
+test_cov: migrate-up
 	docker-compose exec web pytest --runslow --verbose --cov
 
-test_cov_view: migrate
+test_cov_view: migrate-up
 	docker-compose exec web pytest --runslow --cov --cov-report html && open ./htmlcov/index.html
 
 test_fast: ## Can pass in parameters using p=''

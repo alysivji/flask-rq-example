@@ -21,7 +21,6 @@ services:
   web:
     build:
       context: .
-    image: app_web
     command: ["gunicorn", "app:app", "-b", "0.0.0.0:5000", "--reload", "--timeout",  "100000"]
     depends_on:
       - db
@@ -32,7 +31,7 @@ services:
       - "5000:5000"
     stdin_open: true
     tty: true
-    environment:
+    environment: &env_vars
       FLASK_APP: /home/web/app/__init__.py
       DATABASE_URI: postgresql://sivpack:sivpack_dev@db:5432/sivdev
       REDIS_URI: redis://redis:6379
@@ -40,8 +39,7 @@ services:
   worker:
     build:
       context: .
-    image: app_web
-    command: ["flask", "rq", "worker"]
+    command: ["python", "start_async_worker.py"]
     depends_on:
       - db
     volumes:
@@ -49,17 +47,14 @@ services:
       - ./.pdbrc.py:/home/sivpack/.pdbrc.py
     stdin_open: true
     tty: true
-    environment:
-      FLASK_APP: /home/web/app/__init__.py
-      DATABASE_URI: postgresql://sivpack:sivpack_dev@db:5432/sivdev
-      REDIS_URI: redis://redis:6379
-  rq-dash:
-    build:
-      context: ./rq-dashboard/
-    environment:
-      RQ_DASHBOARD_REDIS_URL: redis://redis:6379
-    depends_on:
-      - redis
-    ports:
-      - "9181:9181"
-    command: ["rq-dashboard"]
+    environment: *env_vars
+  # rq-dash:
+  #   build:
+  #     context: ./rq-dashboard/
+  #   environment:
+  #     RQ_DASHBOARD_REDIS_URL: redis://redis:6379
+  #   depends_on:
+  #     - redis
+  #   ports:
+  #     - "9181:9181"
+  #   command: ["rq-dashboard"]

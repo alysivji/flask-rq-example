@@ -3,5 +3,8 @@ Flask-Migrate
 Flask-RQ2
 Flask-SQLAlchemy
 gunicorn
+ipython
 psycopg2-binary
 pytest
+python-json-logger
+sentry-sdk[flask]==0.7.6
